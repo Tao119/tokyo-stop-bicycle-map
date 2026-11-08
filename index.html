@@ -39,9 +39,11 @@
   <h1><span>レイヤー</span><button id="toggle" type="button">折りたたむ</button></h1>
   <div id="layers"></div>
   <div id="note">
-    背景: © OpenStreetMap contributors<br>
-    交通規制情報: 公益財団法人 日本道路交通情報センター(JARTIC)オープンデータ<br>
-    一時停止の進入方向・対象車両は、東京都のデータにほぼ含まれていません(方向情報なし)。
+    <b>矢印</b>は、一時停止で止まる車の進行方向を道路網から推定したものです(点に向かって進む向き)。
+    <span style="color:#b91c1c">■</span>高 <span style="color:#ea580c">■</span>中 <span style="color:#9ca3af">■</span>低(信頼度)。
+    矢印がない点は、大通り走行中の誤判定を避けるため向きを出していません。
+    JARTICの原データには進入方向がほぼ入っていません。<br>
+    背景: © OpenStreetMap contributors / 交通規制情報: JARTIC(日本道路交通情報センター)オープンデータ
   </div>
 </div>
 <div id="status"></div>
@@ -56,6 +58,7 @@
   // tiles: data/tiles/{tiles}.pmtiles, id: PMTilesのレイヤー名
   const GROUPS = [
     { title: 'JARTIC(警察の交通規制情報)', layers: [
+      { id: 'jartic_stop_dir', label: '一時停止の進入方向(推定・矢印)', tiles: 'jartic', type: 'arrow', srcLayer: 'jartic_stop', color: '#b91c1c', on: true, minzoom: 14 },
       { id: 'jartic_stop', label: '一時停止 (63)', tiles: 'jartic', type: 'point', color: '#d62828', on: true },
       { id: 'jartic_bike_sidewalk_ok', label: '普通自転車歩道通行可 (81)', tiles: 'jartic', type: 'line', color: '#1d4ed8', on: true },
       { id: 'jartic_bike_sidewalk_part', label: '普通自転車の歩道通行部分 (82)', tiles: 'jartic', type: 'line', color: '#06b6d4', on: true },
@@ -63,20 +66,13 @@
       { id: 'jartic_bike_crossing', label: '自転車横断帯 (87)', tiles: 'jartic', type: 'mixed', color: '#f59e0b', on: true },
       { id: 'jartic_closure_bike', label: '通行止め系(自転車対象)', tiles: 'jartic', type: 'line', color: '#7f1d1d', dash: [2, 1.5], on: true },
     ]},
-    { title: 'OSM(OpenStreetMap, 23区)', layers: [
-      { id: 'osm_cycleway', label: '自転車道・自転車レーン', tiles: 'osm', type: 'line', color: '#16a34a', on: true },
-      { id: 'osm_cycleway_shared', label: '共用の自転車設備 (矢羽根・路肩など)', tiles: 'osm', type: 'line', color: '#86efac', on: false },
-      { id: 'osm_bicycle_designated', label: '自転車指定 (bicycle=designated)', tiles: 'osm', type: 'line', color: '#0d9488', dash: [3, 2], on: true },
-      { id: 'osm_bicycle_no', label: '自転車通行不可 (bicycle=no)', tiles: 'osm', type: 'line', color: '#4b5563', on: true },
-      { id: 'osm_stop', label: '一時停止 (highway=stop)', tiles: 'osm', type: 'point', color: '#2563eb', on: true },
-    ]},
   ];
   const ALL = GROUPS.flatMap(g => g.layers);
 
   // ポップアップ用の属性ラベル(表示順)
   const LABELS = {
     regulation: '規制種別', name_pref: '県別名称', intersection: '交差点名', road_name: '路線名', road_type: '道路種別',
-    has_direction: '方向情報', approach_text: '進入方向(文字)', approach_coords: '進入方向(座標)',
+    has_direction: 'JARTICの方向情報', dir_status: '向きの推定(信頼度)', dir_text: '推定した向き', dir_bearing: '進行方位(度, 北=0)', dir_basis: '推定の根拠', dir_junction_m: '交差点までの距離(m)', dir_road_class: '停止する道路の種別', dir_road_name: '停止する道路名', dir_cross_class: '交差する道路の種別', dir_cross_name: '交差する道路名', dir_note: '推定できない理由', approach_text: '進入方向(文字)', approach_coords: '進入方向(座標)',
     targets: '対象車両', target_note: '対象車両の備考', excludes: '除外車両', bike_status: '自転車の扱い',
     condition: '規制条件', time_from: '規制時間(開始)', time_to: '規制時間(終了)', weekday_code: '曜日コード',
     side_code: '片側・両側', length_m: '延長(m)', remarks: '備考', revised: '意思決定改正日', unique_key: 'ユニークキー',
@@ -113,11 +109,25 @@
       return { data: this.buf.slice(offset, offset + length) };
     }
   }
+  // Range対応サーバー(GitHub Pages等)なら必要な部分だけ、非対応(python -m http.server)なら全体を取得
+  class AutoSource {
+    constructor(url) { this.url = url; this.mode = null; this.whole = new WholeFileSource(url); this.ranged = new pmtiles.FetchSource(url); }
+    getKey() { return this.url; }
+    async getBytes(offset, length, signal, etag) {
+      if (!this.mode) {
+        try {
+          const r = await fetch(this.url, { headers: { Range: 'bytes=0-0' } });
+          this.mode = r.status === 206 ? 'range' : 'whole';
+        } catch (e) { this.mode = 'whole'; }
+      }
+      return this.mode === 'range' ? this.ranged.getBytes(offset, length, signal, etag) : this.whole.getBytes(offset, length);
+    }
+  }
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol('pmtiles', protocol.tile);
-  const tileSets = ['jartic', 'osm'];
+  const tileSets = ['jartic'];
   const tileUrl = (n) => new URL('data/tiles/' + n + '.pmtiles', location.href).href;
-  tileSets.forEach((n) => protocol.add(new pmtiles.PMTiles(new WholeFileSource(tileUrl(n)))));
+  tileSets.forEach((n) => protocol.add(new pmtiles.PMTiles(new AutoSource(tileUrl(n)))));
 
   // ---- 地図 ---------------------------------------------------------------
   function paintFor(l) {
@@ -136,12 +146,21 @@
 
   // mixed は線と点の両方を持つレイヤー。線用は l.id、点用は l.id + '_pt'
   const layerIds = (l) => (l.type === 'mixed' ? [l.id, l.id + '_pt'] : [l.id]);
-  const styleLayers = [{ id: 'basemap', type: 'raster', source: 'osm' },
-    { id: 'wards', type: 'line', source: 'wards', layout: { visibility: 'none' },
-      paint: { 'line-color': '#111827', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': 0.7 } }];
+  const styleLayers = [{ id: 'basemap', type: 'raster', source: 'osm' }];
+  const ARROW_COLOR = ['match', ['get', 'dir_status'], '高', '#b91c1c', '中', '#ea580c', '低', '#9ca3af', '#9ca3af'];
   const mkLayer = (l, id, kind, filter) => {
+    if (kind === 'arrow') {
+      // 推定した進行方位(dir_bearing)で回転する矢印。矢じりが停止位置、尾が手前(車が来る側)
+      return { id, source: 'jartic', 'source-layer': l.srcLayer, type: 'symbol', minzoom: l.minzoom || 0,
+        filter: ['has', 'dir_bearing'],
+        layout: { visibility: l.on ? 'visible' : 'none',
+          'icon-image': ['concat', 'arrow-', ['get', 'dir_status']],
+          'icon-rotate': ['get', 'dir_bearing'], 'icon-rotation-alignment': 'map', 'icon-pitch-alignment': 'map',
+          'icon-anchor': 'top', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.22, 16, 0.4, 18, 0.7, 19, 1] } };
+    }
     const p = paintFor(Object.assign({}, l, { type: kind }));
-    const def = { id, source: l.tiles === 'jartic' ? 'jartic' : 'osmdata', 'source-layer': l.id, type: p.type,
+    const def = { id, source: 'jartic', 'source-layer': l.id, type: p.type,
       paint: p.paint, layout: Object.assign({ visibility: l.on ? 'visible' : 'none' }, p.layout || {}) };
     if (filter) def.filter = filter;
     return def;
@@ -150,6 +169,7 @@
   ALL.filter((l) => l.type === 'line').forEach((l) => styleLayers.push(mkLayer(l, l.id, 'line')));
   ALL.filter((l) => l.type === 'mixed').forEach((l) =>
     styleLayers.push(mkLayer(l, l.id, 'line', ['==', ['geometry-type'], 'LineString'])));
+  ALL.filter((l) => l.type === 'arrow').forEach((l) => styleLayers.push(mkLayer(l, l.id, 'arrow')));
   ALL.filter((l) => l.type === 'point').forEach((l) => styleLayers.push(mkLayer(l, l.id, 'point')));
   ALL.filter((l) => l.type === 'mixed').forEach((l) =>
     styleLayers.push(mkLayer(l, l.id + '_pt', 'point', ['==', ['geometry-type'], 'Point'])));
@@ -165,18 +185,27 @@
                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
         jartic: { type: 'vector', url: 'pmtiles://' + tileUrl('jartic'),
                   attribution: '交通規制情報: <a href="https://www.jartic.or.jp/service/opendata/">JARTIC</a>' },
-        osmdata: { type: 'vector', url: 'pmtiles://' + tileUrl('osm') },
-        wards: { type: 'geojson', data: 'data/wards_23.geojson' },
       },
       layers: styleLayers,
     },
   });
   window.map = map; // デバッグ・動作確認用
+  const ARROW_COLORS = { '高': '#b91c1c', '中': '#ea580c', '低': '#9ca3af' };
+  map.on('styleimagemissing', (e) => {
+    const m = /^arrow-(.+)$/.exec(e.id);
+    if (!m || !ARROW_COLORS[m[1]]) return;
+    const w = 40, hgt = 72, c = document.createElement('canvas'); c.width = w; c.height = hgt;
+    const g = c.getContext('2d');
+    g.beginPath();  // 上向きの矢印。矢じり(上端)が停止位置
+    g.moveTo(w / 2, 2); g.lineTo(w - 3, 26); g.lineTo(w / 2 + 6, 26); g.lineTo(w / 2 + 6, hgt - 2);
+    g.lineTo(w / 2 - 6, hgt - 2); g.lineTo(w / 2 - 6, 26); g.lineTo(3, 26); g.closePath();
+    g.fillStyle = ARROW_COLORS[m[1]]; g.fill(); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke();
+    map.addImage(e.id, g.getImageData(0, 0, w, hgt), { pixelRatio: 1 });
+  });
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
 
   buildPanel();
-  addWardsToggle();
   loadCounts();
 
   map.on('error', (e) => {
@@ -204,16 +233,6 @@
       });
     });
   }
-  function addWardsToggle() {
-    const root = $('layers');
-    const h = document.createElement('h2'); h.textContent = '参考'; root.appendChild(h);
-    const row = document.createElement('label'); row.className = 'row';
-    const cb = document.createElement('input'); cb.type = 'checkbox';
-    cb.addEventListener('change', () => map.setLayoutProperty('wards', 'visibility', cb.checked ? 'visible' : 'none'));
-    const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = '#111827';
-    const t = document.createElement('span'); t.textContent = '23区の境界(OSMの取得範囲)';
-    row.append(cb, sw, t); root.appendChild(row);
-  }
   function loadCounts() {
     fetch('data/quality_report.json').then((r) => (r.ok ? r.json() : null)).then((q) => {
       if (!q) return;
@@ -232,7 +251,7 @@
 
   // ---- クリックで属性ポップアップ ---------------------------------------------
   function activeIds() {
-    return ALL.flatMap(layerIds).filter((id) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') === 'visible');
+    return ALL.filter((l) => l.type !== 'arrow').flatMap(layerIds).filter((id) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') === 'visible');
   }
   function renderFeature(f) {
     const def = ALL.find((l) => l.id === f.layer['source-layer']);
@@ -240,13 +259,13 @@
     // 一時停止: 方向情報の有無を明示する
     if (f.layer['source-layer'] === 'jartic_stop') {
       const has = p.has_direction === true || p.has_direction === 'true';
-      p.has_direction = has ? 'あり' : '方向情報なし';
+      p.has_direction = has ? 'あり' : 'なし(原データ)';
     }
     const order = Object.keys(LABELS);
     const keys = order.filter((k) => p[k] !== undefined && p[k] !== null && p[k] !== '')
       .concat(Object.keys(p).filter((k) => !(k in LABELS) && k !== 'code'));
     const rows = keys.map((k) => {
-      const cls = (k === 'has_direction' && p[k] === '方向情報なし') ? ' class="nodata"' : '';
+      const cls = (k === 'has_direction' && p[k] === 'なし(原データ)') ? ' class="nodata"' : '';
       return '<tr><td>' + esc(LABELS[k] || k) + '</td><td' + cls + '>' + esc(p[k]) + '</td></tr>';
     }).join('');
     const osm = p.osm_id ? ' <a href="https://www.openstreetmap.org/' + esc(p.osm_id) + '" target="_blank" rel="noopener">OSMで開く</a>' : '';
