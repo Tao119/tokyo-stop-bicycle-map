@@ -1,0 +1,175 @@
+{
+  "layers": {
+    "jartic_stop": {
+      "label": "JARTIC 一時停止(63)",
+      "count": 141084,
+      "vertices": 141084,
+      "bbox": [
+        138.988548,
+        32.464849,
+        139.916667,
+        35.841499
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 88017,
+      "vertices_outside_23wards": 53067,
+      "share_in_23wards": 0.6238623798588075
+    },
+    "jartic_bike_sidewalk_ok": {
+      "label": "JARTIC 普通自転車歩道通行可(81)",
+      "count": 332,
+      "vertices": 4856,
+      "bbox": [
+        139.205702,
+        35.501932,
+        139.917917,
+        35.808212
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 2884,
+      "vertices_outside_23wards": 1972,
+      "share_in_23wards": 0.5939044481054365
+    },
+    "jartic_bike_sidewalk_part": {
+      "label": "JARTIC 普通自転車の歩道通行部分(82)",
+      "count": 132,
+      "vertices": 1104,
+      "bbox": [
+        139.25944,
+        35.54131,
+        139.881913,
+        35.788884
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 678,
+      "vertices_outside_23wards": 426,
+      "share_in_23wards": 0.6141304347826086
+    },
+    "jartic_bike_no_entry": {
+      "label": "JARTIC 普通自転車の交差点進入禁止(83)",
+      "count": 0,
+      "vertices": 0
+    },
+    "jartic_bike_crossing": {
+      "label": "JARTIC 自転車横断帯(87)",
+      "count": 2148,
+      "vertices": 4345,
+      "bbox": [
+        139.269738,
+        35.54965,
+        139.885799,
+        35.81198
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 3056,
+      "vertices_outside_23wards": 1289,
+      "share_in_23wards": 0.7033371691599539
+    },
+    "jartic_closure_bike": {
+      "label": "JARTIC 通行止め系(自転車対象)",
+      "count": 3687,
+      "vertices": 62509,
+      "bbox": [
+        138.986975,
+        27.092688,
+        142.204967,
+        35.857924
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 42799,
+      "vertices_outside_23wards": 19710,
+      "share_in_23wards": 0.6846854053016366
+    },
+    "osm_cycleway": {
+      "label": "OSM 自転車道・自転車レーン",
+      "count": 1874,
+      "vertices": 16737,
+      "bbox": [
+        139.568313,
+        35.53886,
+        139.917692,
+        35.807125
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 16647,
+      "vertices_outside_23wards": 90,
+      "share_in_23wards": 0.9946226922387524
+    },
+    "osm_cycleway_shared": {
+      "label": "OSM 共用の自転車設備(矢羽根等)",
+      "count": 2857,
+      "vertices": 28549,
+      "bbox": [
+        139.565545,
+        35.539996,
+        139.904379,
+        35.813781
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 28526,
+      "vertices_outside_23wards": 23,
+      "share_in_23wards": 0.9991943675785492
+    },
+    "osm_bicycle_designated": {
+      "label": "OSM bicycle=designated",
+      "count": 563,
+      "vertices": 4971,
+      "bbox": [
+        139.584979,
+        35.540321,
+        139.917884,
+        35.814792
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 4950,
+      "vertices_outside_23wards": 21,
+      "share_in_23wards": 0.995775497887749
+    },
+    "osm_bicycle_no": {
+      "label": "OSM 自転車通行不可(bicycle=no)",
+      "count": 3147,
+      "vertices": 25811,
+      "bbox": [
+        139.569382,
+        35.516842,
+        139.915314,
+        35.817729
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 25664,
+      "vertices_outside_23wards": 147,
+      "share_in_23wards": 0.994304753787145
+    },
+    "osm_stop": {
+      "label": "OSM 一時停止(highway=stop)",
+      "count": 20834,
+      "vertices": 20834,
+      "bbox": [
+        139.565682,
+        35.5353,
+        139.903831,
+        35.816031
+      ],
+      "vertices_outside_tokyo_bbox": 0,
+      "vertices_in_23wards": 20834,
+      "vertices_outside_23wards": 0,
+      "share_in_23wards": 1.0
+    }
+  },
+  "stop_overlap": {
+    "jartic_stops_in_23wards": 88017,
+    "osm_stops_in_23wards": 20834,
+    "within_15m": {
+      "jartic_with_osm_nearby": 0.23022825136053263,
+      "osm_with_jartic_nearby": 0.9442257847748872
+    },
+    "within_30m": {
+      "jartic_with_osm_nearby": 0.2496904007180431,
+      "osm_with_jartic_nearby": 0.9579053470288951
+    },
+    "within_50m": {
+      "jartic_with_osm_nearby": 0.2900576025086063,
+      "osm_with_jartic_nearby": 0.9692809830085437
+    }
+  }
+}

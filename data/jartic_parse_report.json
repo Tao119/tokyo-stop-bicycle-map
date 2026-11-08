@@ -1,0 +1,52 @@
+{
+  "source_zip": "typeD_tokyo.zip",
+  "csv_member_encoding": "cp932",
+  "rows_total": 570562,
+  "rows_per_code": {
+    "4": 13291,
+    "63": 141174,
+    "81": 333,
+    "82": 132,
+    "87": 2148
+  },
+  "excluded_by_vehicle": {
+    "4:除外車両に自転車を含む": 3630,
+    "4:条件付き除外(残した)": 2754,
+    "4:対象車両に自転車を含まない": 5974
+  },
+  "vertex_outside_tokyo_bbox": 140,
+  "bad_vertex": 0,
+  "no_geometry": 91,
+  "stop_direction": {
+    "text_and_coords": 0,
+    "text_only": 0,
+    "coords_only": 73,
+    "none": 141011
+  },
+  "layers": {
+    "jartic_bike_crossing": {
+      "count": 2148,
+      "bytes": 594922
+    },
+    "jartic_bike_no_entry": {
+      "count": 0,
+      "bytes": 42
+    },
+    "jartic_bike_sidewalk_ok": {
+      "count": 332,
+      "bytes": 206306
+    },
+    "jartic_bike_sidewalk_part": {
+      "count": 132,
+      "bytes": 64790
+    },
+    "jartic_closure_bike": {
+      "count": 3687,
+      "bytes": 2884220
+    },
+    "jartic_stop": {
+      "count": 141084,
+      "bytes": 44131650
+    }
+  }
+}

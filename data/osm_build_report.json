@@ -1,0 +1,20 @@
+{
+  "osm_base_timestamps": [
+    "2026-11-08T03:03:48Z",
+    "2026-11-08T03:05:51Z",
+    "2026-11-08T03:06:48Z",
+    "2026-11-08T03:07:50Z",
+    "2026-11-08T03:08:45Z"
+  ],
+  "counts": {
+    "osm_cycleway": 1874,
+    "osm_cycleway_shared": 2857,
+    "osm_bicycle_designated": 563,
+    "osm_bicycle_no": 3147,
+    "osm_stop": 20834
+  },
+  "dropped_outside_23wards": {
+    "stops": 7543,
+    "ways": 5106
+  }
+}
